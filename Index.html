@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>⚽ Football Coach IA</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#060e06;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#e8f5e8;font-size:16px;-webkit-tap-highlight-color:transparent}
+input,button,select{font-family:inherit}
+input{width:100%;padding:14px 16px;border-radius:12px;border:1px solid #1a3a1a;background:#0d1a0d;color:#e8f5e8;font-size:16px}
+input::placeholder{color:#3a5a3a}
+input:focus{outline:none;border-color:#7fff47}
+button{cursor:pointer;border:none;font-size:15px}
+::-webkit-scrollbar{width:0}
+.screen{min-height:100vh;padding:0 20px 40px;max-width:480px;margin:0 auto}
+.hidden{display:none!important}
+.pill{padding:8px 16px;border-radius:20px;border:1px solid #2a3a2a;background:#111b11;color:#7fff47;font-size:14px;font-weight:500}
+.pill.active{border:none;background:#7fff47;color:#0a1a0a;font-weight:700}
+.card{background:#0d1a0d;border:1px solid #1a3a1a;border-radius:14px;padding:16px}
+.label{color:#3a5a3a;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:10px}
+.btn-main{width:100%;padding:16px;border-radius:14px;background:#7fff47;color:#060e06;font-size:16px;font-weight:800}
+.btn-outline{width:100%;padding:16px;border-radius:14px;background:transparent;border:2px solid #7fff47;color:#7fff47;font-size:16px;font-weight:700}
+.btn-ghost{width:100%;padding:13px;border-radius:12px;background:none;border:1px solid #2a5a2a;color:#5a9a5a;font-size:14px;font-weight:700}
+@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}
+@keyframes su{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.dots{display:flex;gap:6px;padding:14px 0}
+.dot{width:10px;height:10px;border-radius:50%;background:#7fff47}
+.dot:nth-child(1){animation:pulse 1.2s ease-in-out 0s infinite}
+.dot:nth-child(2){animation:pulse 1.2s ease-in-out .2s infinite}
+.dot:nth-child(3){animation:pulse 1.2s ease-in-out .4s infinite}
+/* Bottom nav */
+#bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:#060e06;border-top:1px solid #1a2a1a;display:flex;padding:10px 0 22px;z-index:50}
+.nav-btn{flex:1;background:none;border:none;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 0}
+.nav-icon{font-size:22px}
+.nav-label{font-size:11px;font-weight:700;color:#2a4a2a}
+.nav-label.active{color:#7fff47}
+.nav-dot{width:5px;height:5px;border-radius:50%;background:#7fff47}
+/* Header */
+#main-header{position:sticky;top:0;z-index:40;background:#060e06;border-bottom:1px solid #0d1a0d;padding:13px 18px 11px;display:flex;justify-content:space-between;align-items:center;max-width:480px;margin:0 auto}
+/* Progress bars */
+.progress-bar{height:9px;background:#1a2a1a;border-radius:5px;overflow:hidden;margin:6px 0}
+.progress-fill{height:100%;border-radius:5px;transition:width .5s}
+/* Session runner */
+#runner{position:fixed;inset:0;background:#060e06;z-index:100;overflow-y:auto;max-width:480px;margin:0 auto}
+#runner-header{position:sticky;top:0;background:#060e06;border-bottom:1px solid #0d1a0d;padding:14px 18px 10px;z-index:10}
+/* Timer */
+#timer-box{border-radius:16px;padding:18px 20px;margin-top:14px}
+#timer-num{font-size:56px;font-weight:900;text-align:center;line-height:1;font-variant-numeric:tabular-nums}
+/* Info modal */
+#info-modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:200;display:flex;flex-direction:column;justify-content:flex-end}
+#info-inner{background:#0a1a0a;border-radius:22px 22px 0 0;padding:24px 22px 44px;border:1px solid #2a4a2a;max-height:85vh;overflow-y:auto;animation:su .2s ease}
+/* Body weight modal */
+#bw-modal{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:150;display:flex;flex-direction:column;justify-content:flex-end}
+#bw-inner{background:#0a1a0a;border-radius:22px 22px 0 0;padding:24px 20px 44px;border:1px solid #1a3a1a;max-height:75vh;overflow-y:auto;animation:su .2s ease}
+/* Chat */
+#chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 64px);padding-top:18px}
+#chat-msgs{flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.msg-user{align-self:flex-end;max-width:86%;background:#7fff47;color:#060e06;padding:13px 16px;border-radius:18px 18px 4px 18px;font-size:15px;line-height:1.75}
+.msg-ai{align-self:flex-start;max-width:86%;background:#0d1a0d;color:#c8e8c8;padding:13px 16px;border-radius:18px 18px 18px 4px;font-size:15px;line-height:1.75;border:1px solid #1a3a1a;white-space:pre-wrap}
+#chat-input-row{padding:12px 14px;border-top:1px solid #1a2a1a;display:flex;gap:10px;background:#060e06}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// ── Constants ──
+const POS=["Attaquant","Milieu offensif","Milieu défensif","Défenseur","Latéral","Gardien"];
+const OBJ=["Vitesse & explosivité","Technique balle au pied","Physique & endurance","Finition","Vision du jeu","Domination aérienne","Placement défensif"];
+const WEAK=["Pied faible","Dribble","Centres","Jeu de tête","Pressing","Récupération balle","Gestion de l'espace","Confiance en soi"];
+const LVLS=["Amateur","Régional","Départemental","National","Semi-pro"];
+const GOALS=[{id:"muscle",label:"Prise de muscle",icon:"💪"},{id:"fat_loss",label:"Perte de graisse",icon:"🔥"},{id:"maintain",label:"Maintien",icon:"⚖️"},{id:"recomp",label:"Recomposition",icon:"🔄"}];
+const STYPES=[{id:"salle",label:"Salle",icon:"🏋️"},{id:"terrain",label:"Terrain",icon:"⚽"},{id:"course",label:"Course",icon:"🏃"}];
+const TABS=[{id:"program",label:"Programme",icon:"🗓"},{id:"nutrition",label:"Nutrition",icon:"🥗"},{id:"mental",label:"Mental",icon:"🧠"},{id:"coach",label:"Coach",icon:"⚡"}];
+const NUTRI_T=[["avant","Avant"],["pendant","Pendant"],["après","Récup"],["quotidien","Jour type"],["compétition","Match"]];
+const MENTAL_T=[["routine","Routine"],["confiance","Confiance"],["pression","Pression"],["visualisation","Visualisation"],["resilience","Résilience"],["sommeil","Sommeil"]];
+
+// ── State ──
+let S={
+  apiKey:localStorage.getItem("fc_key")||"",
+  profile:null,
+  log:[],
+  weightLog:{},
+  bodyWeights:[],
+  tab:"program",
+  onboardStep:0,
+  onboardForm:{name:"",age:"",position:"",level:"",objectives:[],weaknesses:[],deadline:"",sessionsPerWeek:"3",height:"",currentWeight:"",targetWeight:"",bodyGoal:"muscle"},
+  generating:false,
+  pendingSession:null,
+  error:"",
+  stype:"terrain",
+  runner:null,
+  nutri_t:"avant",
+  nutri_result:null,
+  nutri_loading:false,
+  mental_t:"routine",
+  mental_result:null,
+  mental_loading:false,
+  chat:[],
+  chat_loading:false,
+  info_ex:null,
+  show_bw:false,
+  timer:{active:false,remaining:0,label:"",isLast:false,exIdx:0,setIdx:0},
+};
+
+// ── Load saved data ──
+try{S.profile=JSON.parse(localStorage.getItem("fc_profile"));}catch(e){}
+try{S.log=JSON.parse(localStorage.getItem("fc_sessions"))||[];}catch(e){}
+try{S.weightLog=JSON.parse(localStorage.getItem("fc_weights"))||{};}catch(e){}
+try{S.bodyWeights=JSON.parse(localStorage.getItem("fc_bw"))||[];}catch(e){}
+
+// ── Utils ──
+const save=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}};
+const fmtDate=()=>new Date().toLocaleDateString("fr-FR",{weekday:"short",day:"numeric",month:"short"});
+const getWk=()=>{const n=new Date(),j=new Date(n.getFullYear(),0,1),w=Math.ceil(((n-j)/86400000+j.getDay()+1)/7);return`${n.getFullYear()}-W${w}`;};
+const parseWks=d=>{if(!d)return null;const m=d.match(/(\d+)\s*(semaine|sem|week)/i);return m?parseInt(m[1]):null;};
+
+function beep(f=880,d=.4){
+  try{const c=new(window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();
+  o.connect(g);g.connect(c.destination);o.frequency.value=f;
+  g.gain.setValueAtTime(.4,c.currentTime);g.gain.exponentialRampToValueAtTime(.01,c.currentTime+d);
+  o.start(c.currentTime);o.stop(c.currentTime+d);}catch(e){}
+}
+
+// BMR/TDEE
+const calcBMR=(w,h,a)=>Math.round(10*w+6.25*h-5*a+5);
+const calcTDEE=(b)=>Math.round(b*1.75);
+const calcTarget=(t,g)=>g==="muscle"?t+350:g==="fat_loss"?t-400:g==="recomp"?t+50:t;
+const calcProt=(w,g)=>Math.round(w*(g==="fat_loss"?2.4:g==="muscle"?2.2:2.0));
+
+// ── JSON extraction ──
+function extractJSON(txt){
+  if(!txt)return null;
+  const clean=txt.replace(/```json/gi,"").replace(/```/g,"").trim();
+  const s=clean.indexOf("{"),e=clean.lastIndexOf("}");
+  if(s===-1||e<=s)return null;
+  const str=clean.slice(s,e+1);
+  try{const j=JSON.parse(str);if(j&&Array.isArray(j.exercices)&&j.exercices.length>0)return j;}catch(e1){}
+  try{const j=JSON.parse(str.replace(/,\s*([}\]])/g,"$1"));if(j&&Array.isArray(j.exercices))return j;}catch(e2){}
+  return null;
+}
+
+// ── API ──
+const SYS=()=>{
+  const p=S.profile;
+  const bmi=p.height&&p.currentWeight?`\nCorps: ${p.height}cm, ${p.currentWeight}kg → ${p.targetWeight||"?"}kg (${GOALS.find(g=>g.id===p.bodyGoal)?.label||"maintien"}) | TDEE: ${calcTDEE(calcBMR(+p.currentWeight,+p.height,+p.age))} kcal | Cible: ${calcTarget(calcTDEE(calcBMR(+p.currentWeight,+p.height,+p.age)),p.bodyGoal)} kcal/j`:"";
+  return`Tu es un coach football UEFA d'élite. Bases scientifiques : NSCA, ACSM, Journal of Sports Sciences. Académies : Bayern Munich, Manchester City, PSG, Chelsea, BVB, Ajax. Cite toujours la source.
+Joueur : ${p.name}, ${p.age}ans | ${p.position} | ${p.level}
+Objectifs : ${p.objectives?.join(", ")} | Points faibles : ${p.weaknesses?.join(", ")}
+Échéance : ${p.deadline||"non précisée"} | ${p.sessionsPerWeek||3} séances/sem${bmi}
+Règles : Direct, actionnable, sections claires, français, mobile.`;
+};
+
+const PPROMPT=(t)=>{
+  const p=S.profile;
+  const type=t==="salle"?"musculation en salle":t==="terrain"?"technique/tactique avec ballon":"course et sprints";
+  return`Génère une séance de ${type} pour ${p.position} (${p.level}). Objectifs: ${p.objectives?.join(", ")}. Points faibles: ${p.weaknesses?.join(", ")}. Méthodes académies d'élite + recherche scientifique.
+RÈGLE ABSOLUE: NE JAMAIS écrire \`\`\`json. Ta réponse commence par { et se termine par }. Rien d'autre :
+{"titre":"...","objectif":"...","duree":"45 min","echauffement":"...","exercices":[{"nom":"...","series":4,"repetitions":"8-10","repos_serie":90,"repos_exercice":180,"groupes":"...","description":"Exécution détaillée 3-5 phrases.","science":"Référence académie ou étude.","youtube_query":"exercice football tutorial"}],"retour_au_calme":"..."}`;
+};
+
+async function callAPI(msgs,sys){
+  const r=await fetch("https://api.anthropic.com/v1/messages",{
+    method:"POST",
+    headers:{"Content-Type":"application/json","x-api-key":S.apiKey,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},
+    body:JSON.stringify({model:"claude-sonnet-4-6",max_tokens:2500,system:sys||SYS(),messages:msgs})
+  });
+  const d=await r.json();
+  if(d.error){
+    const m=JSON.stringify(d.error);
+    if(m.includes("exceeded_limit")||m.includes("credit"))throw new Error("💳 Crédit épuisé → console.anthropic.com → Billing");
+    if(m.includes("rate_limit")||m.includes("overloaded"))throw new Error("⏳ Trop de requêtes, attends 1-2 min");
+    if(m.includes("auth"))throw new Error("🔑 Clé API invalide");
+    throw new Error("Erreur: "+m.substring(0,100));
+  }
+  return d.content?.[0]?.text||"";
+}
+
+// ── Timer management ──
+let timerInterval=null;
+function startTimer(duration,label,isLast,exIdx,setIdx){
+  clearInterval(timerInterval);
+  S.timer={active:true,remaining:duration,label,isLast,exIdx,setIdx};
+  updateTimerUI();
+  timerInterval=setInterval(()=>{
+    S.timer.remaining--;
+    if(S.timer.remaining<=3&&S.timer.remaining>0)beep(440,.12);
+    if(S.timer.remaining<=0){
+      clearInterval(timerInterval);
+      beep(880,.8);
+      S.timer.active=false;
+      if(isLast){
+        // Move to next exercise
+        if(S.runner){
+          S.runner.exIdx++;
+          S.runner.doneSets=[];
+          S.runner.weights=[];
+        }
+      }
+      renderRunner();
+      return;
+    }
+    updateTimerUI();
+  },1000);
+}
+function stopTimer(){clearInterval(timerInterval);S.timer.active=false;}
+
+function updateTimerUI(){
+  const box=document.getElementById("timer-box");
+  const num=document.getElementById("timer-num");
+  const bar=document.getElementById("timer-bar");
+  if(!box||!num)return;
+  const {remaining,label,active}=S.timer;
+  if(!active){box.style.display="none";return;}
+  box.style.display="block";
+  const urgent=remaining<=10;
+  box.style.background=urgent?"#160606":"#061806";
+  box.style.border=`2px solid ${urgent?"#ff6b3d":"#2a5a2a"}`;
+  const min=Math.floor(remaining/60),sec=remaining%60;
+  num.textContent=min>0?`${min}:${sec.toString().padStart(2,"0")}`:remaining;
+  num.style.color=urgent?"#ff6b3d":"#7fff47";
+  const dur=S.timer.isLast?(S.runner?.session?.exercices?.[S.runner.exIdx-1]?.repos_exercice||180):(S.runner?.session?.exercices?.[S.runner.exIdx]?.repos_serie||90);
+  const pct=Math.max(0,((dur-remaining)/dur)*100);
+  if(bar){bar.style.width=pct+"%";bar.style.background=urgent?"#ff6b3d":"linear-gradient(90deg,#7fff47,#ffd700)";}
+  const lbl=document.getElementById("timer-label");
+  if(lbl)lbl.textContent=label;
+}
+
+// ── Render helpers ──
+function pillsHTML(items,selected,prefix,multi=false){
+  if(Array.isArray(selected)){
+    return items.map(v=>`<button class="pill ${selected.includes(v)?"active":""}" data-action="${prefix}" data-val="${v}">${v}</button>`).join("");
+  }
+  return items.map(v=>`<button class="pill ${selected===v?"active":""}" data-action="${prefix}" data-val="${v}">${v}</button>`).join("");
+}
+
+// ── Progress block ──
+function progressHTML(){
+  const p=S.profile,log=S.log;
+  const wk=getWk(),wt=parseInt(p.sessionsPerWeek||3);
+  const wd=log.filter(s=>s.week===wk&&s.done).length;
+  const wp=Math.min(100,Math.round((wd/wt)*100));
+  const wc=wp>=100?"#7fff47":wp>=50?"#ffd700":"#ff6b3d";
+  const tw=parseWks(p.deadline),tt=tw?tw*wt:null;
+  const td=log.filter(s=>s.done).length;
+  const tp=tt?Math.min(100,Math.round((td/tt)*100)):null;
+  return`<div class="card" style="margin-bottom:18px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <span class="label" style="margin:0">Cette semaine</span>
+      <span style="color:${wc};font-size:22px;font-weight:900">${wd}<span style="color:#3a5a3a;font-size:14px;font-weight:400">/${wt}</span></span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${wp}%;background:${wc}"></div></div>
+    <div style="display:flex;justify-content:space-between">
+      <span style="color:${wc};font-size:13px;font-weight:700">${wp}% accompli</span>
+      <span style="color:#3a5a3a;font-size:13px">${wt-wd>0?`${wt-wd} séance${wt-wd>1?"s":""} restante${wt-wd>1?"s":""}`:"✅ Semaine complète !"}</span>
+    </div>
+    ${tp!==null?`<div style="border-top:1px solid #1a2a1a;margin-top:14px;padding-top:14px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span class="label" style="margin:0">Objectif global</span>
+        <span style="color:#7fff47;font-size:22px;font-weight:900">${td}<span style="color:#3a5a3a;font-size:14px;font-weight:400">/${tt}</span></span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${tp}%;background:linear-gradient(90deg,#7fff47,#ffd700)"></div></div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:#7fff47;font-size:13px;font-weight:700">${tp}% de l'objectif</span>
+        <span style="color:#3a5a3a;font-size:13px">${tt-td} séances restantes</span>
+      </div>
+    </div>`:""}
+  </div>`;
+}
+
+// ── Main render ──
+function render(){
+  const app=document.getElementById("app");
+  if(!S.apiKey||!S.apiKey.startsWith("sk-")){app.innerHTML=renderApiKey();return;}
+  if(!S.profile){app.innerHTML=renderOnboarding();return;}
+  app.innerHTML=`
+    <div id="main-header">
+      <div>
+        <div style="color:#7fff47;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase">Football Coach IA</div>
+        <div style="color:#e8f5e8;font-size:17px;font-weight:800">${S.profile.name} · ${S.profile.position}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <button data-action="show-bw" style="background:#0d1a0d;border:1px solid #1a3a1a;color:#7a9a7a;font-size:15px;padding:7px 12px;border-radius:10px">⚖️</button>
+        <div style="text-align:right">
+          <div style="color:#7fff47;font-size:22px;font-weight:900;line-height:1">${S.log.filter(s=>s.done).length}</div>
+          <div style="color:#3a5a3a;font-size:10px">séances ✓</div>
+        </div>
+        <button data-action="reset" style="background:none;border:1px solid #1a3a1a;color:#3a5a3a;font-size:11px;padding:6px 8px;border-radius:8px">Reset</button>
+      </div>
+    </div>
+    <div style="max-width:480px;margin:0 auto;padding-bottom:80px">
+      ${S.tab==="program"?renderProgram():S.tab==="nutrition"?renderNutrition():S.tab==="mental"?renderMental():renderCoach()}
+    </div>
+    <div id="bottom-nav">
+      ${TABS.map(t=>`<button class="nav-btn" data-action="tab" data-val="${t.id}">
+        <span class="nav-icon">${t.icon}</span>
+        <span class="nav-label ${S.tab===t.id?"active":""}">${t.label}</span>
+        ${S.tab===t.id?`<span class="nav-dot"></span>`:""}
+      </button>`).join("")}
+    </div>
+    ${S.runner?renderRunnerHTML():""}
+    ${S.info_ex?renderInfoModal():""}
+    ${S.show_bw?renderBWModal():""}
+  `;
+  if(S.runner&&S.timer.active)updateTimerUI();
+  scrollChat();
+}
+
+// ── API Key screen ──
+function renderApiKey(){
+  return`<div class="screen" style="display:flex;flex-direction:column;justify-content:center;min-height:100vh">
+    <div style="text-align:center;margin-bottom:36px">
+      <div style="font-size:60px;margin-bottom:16px">⚽</div>
+      <h1 style="font-size:28px;font-weight:900;margin-bottom:10px">Football Coach IA</h1>
+      <p style="color:#3a6a3a;font-size:15px;line-height:1.7">Science-based · Bayern · Man City<br>PSG · Chelsea · BVB · Ajax</p>
+    </div>
+    <div class="card" style="margin-bottom:18px">
+      <div class="label">🔑 Clé API Anthropic</div>
+      <input id="api-input" type="password" placeholder="sk-ant-..." style="margin-bottom:12px">
+      <p style="color:#3a5a3a;font-size:13px;line-height:1.6">Obtiens ta clé sur <strong style="color:#5a8a5a">console.anthropic.com</strong> → API Keys<br>~0,003€/message · Stockée sur cet appareil</p>
+    </div>
+    <button data-action="save-key" class="btn-main">Démarrer →</button>
+  </div>`;
+}
+
+// ── Onboarding ──
+function renderOnboarding(){
+  const f=S.onboardForm,step=S.onboardStep;
+  const steps=[
+    {title:"Qui es-tu ?",sub:"Profil de base",valid:f.name&&f.age,content:`
+      <input id="ob-name" placeholder="Ton prénom" value="${f.name}" data-ob="name" style="margin-bottom:12px">
+      <input id="ob-age" type="number" placeholder="Ton âge" value="${f.age}" data-ob="age" style="margin-bottom:12px">
+      <input id="ob-deadline" placeholder="Échéance (ex: essai dans 6 semaines)" value="${f.deadline}" data-ob="deadline" style="margin-bottom:16px">
+      <div><span class="label">Séances/semaine</span><div style="display:flex;gap:8px;flex-wrap:wrap">${["2","3","4","5","6"].map(n=>`<button class="pill ${f.sessionsPerWeek===n?"active":""}" data-action="ob-setsw" data-val="${n}">${n}</button>`).join("")}</div></div>`},
+    {title:"Ton corps",sub:"Composition corporelle",valid:true,content:`
+      <input id="ob-height" type="number" placeholder="Taille (cm)" value="${f.height}" data-ob="height" style="margin-bottom:12px">
+      <input id="ob-cw" type="number" step="0.5" placeholder="Poids actuel (kg)" value="${f.currentWeight}" data-ob="currentWeight" style="margin-bottom:12px">
+      <input id="ob-tw" type="number" step="0.5" placeholder="Poids visé (kg)" value="${f.targetWeight}" data-ob="targetWeight" sty
